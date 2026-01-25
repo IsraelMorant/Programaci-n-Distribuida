@@ -21,7 +21,11 @@ public class Servidor {
 
             byte[] buffer = new byte[1024];
 
-            while (true) {
+            while (true) {//En lugar de solo manejar un solo cliente ahora se crear un hilo por cada cliente
+
+                Thread hiloCliente = new hiloCliente
+
+                /* 
                 DatagramPacket paquete = new DatagramPacket(buffer, buffer.length);
                 socket.receive(paquete);
 
@@ -50,6 +54,8 @@ public class Servidor {
                 byte[] datosRespuesta = respuestaTexto.getBytes(StandardCharsets.UTF_8);
                 DatagramPacket respuesta = new DatagramPacket(datosRespuesta, datosRespuesta.length, ipCliente, puertoCliente);
                 socket.send(respuesta);
+
+                */
             }
 
         } catch (Exception e) {
@@ -63,7 +69,7 @@ public class Servidor {
             if (archivo.createNewFile()) {
                 System.out.println(">> Archivo creado exitosamente: " + nombre);
                 //return "EXITO: Archivo creado remotamente."; como un solo sistema
-                return "EXITO: Archivo creado remotamente.";
+                return "Archivo creado.";
             } else {
                 System.out.println(">> El archivo ya existe: " + nombre);
                 return "INFO: El archivo ya existía.";
