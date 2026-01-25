@@ -28,7 +28,7 @@ public class Cliente {
             
             sn.useDelimiter("\n");
             
-            Socket sc = new Socket("127.0.0.1",10000);
+            Socket sc = new Socket("192.168.1.109",10000);
             
             DataInputStream in = new DataInputStream(sc.getInputStream());
             DataOutputStream out = new DataOutputStream(sc.getOutputStream());

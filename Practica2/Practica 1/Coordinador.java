@@ -9,9 +9,9 @@ public class Coordinador {
 
     // Nodo 0 = LOCAL
     private static final String[] IPS = {
-            "127.0.0.1", // nodo local
+            "172.24.16.1", // nodo local
             
-            //"192.168.1.21"  // remoto
+            //"192.168.1.21"  //remoto
     };
 
     private static final int[] PUERTOS = {

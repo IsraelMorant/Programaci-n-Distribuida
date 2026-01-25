@@ -1,6 +1,6 @@
+import java.io.File;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
-import java.io.File;
 
 public class NodoLocal {
 
@@ -39,3 +39,4 @@ public class NodoLocal {
         }
     }
 }
+   
