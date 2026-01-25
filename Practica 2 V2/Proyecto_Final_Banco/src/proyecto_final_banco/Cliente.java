@@ -22,13 +22,14 @@ public class Cliente {
      * @param args the command line arguments
      */
     public static void main(String[] args) {
-        
+        //Configuracion de cliente general
         try {
             Scanner sn = new Scanner(System.in);
             
             sn.useDelimiter("\n");
             
-            Socket sc = new Socket("192.168.1.109",10000);
+            Socket sc = new Socket("192.168.1.109",10000);//La ip es la del PC que hace de servidor
+            //Tambien el port debe ser el mismo tanto en el cliente como en la clase servidor
             
             DataInputStream in = new DataInputStream(sc.getInputStream());
             DataOutputStream out = new DataOutputStream(sc.getOutputStream());

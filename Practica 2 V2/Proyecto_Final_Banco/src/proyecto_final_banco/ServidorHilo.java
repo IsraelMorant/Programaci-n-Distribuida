@@ -6,11 +6,12 @@ package proyecto_final_banco;
 
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
+import java.io.File;
 import java.io.IOException;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import java.sql.*;
 import java.util.Random;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 /**
  *
  * @author israe
@@ -20,6 +21,9 @@ import java.util.Random;
 
 
 public class ServidorHilo extends Thread {
+
+     private static final String RUTA_LOCAL = "./archivos";
+
     private DataInputStream in;
     private DataOutputStream out ;
     private String numeroCliente ;
@@ -389,7 +393,33 @@ public class ServidorHilo extends Thread {
                         out.writeInt(r.nextInt(9000000)+1000000);
                         
                         break;
-                    case 9:
+                    case 33://Opcion para crear archivo en el servidor
+                              // 1. Verificamos cuántos archivos tenemos
+                int cantidadActual = contarArchivosLocales();
+                System.out.println("[INFO] Archivos locales/Server actuales: " + cantidadActual);
+                 String nombreArchivo = in.readUTF();
+               
+                    // CASO A: Crear Localmente
+                    int opc = crearLocalmente(nombreArchivo);
+
+                    switch (opc) {
+                        case 1:
+                           // JOptionPane.showMessageDialog(null, "Archivo creado con exito","Aviso", JOptionPane.INFORMATION_MESSAGE);
+                           out.writeInt(1);
+                            break;
+                        case 2:
+                            //JOptionPane.showMessageDialog(null, "El archivo ya existe","Aviso", JOptionPane.INFORMATION_MESSAGE);
+                            out.writeInt(2);
+                            break;
+
+                        case 0:
+                            //JOptionPane.showMessageDialog(null, "Error al crear archivo","Aviso", JOptionPane.WARNING_MESSAGE);
+                            out.writeInt(0);
+                            break;
+                        default:
+                            throw new AssertionError();
+                    }
+
                         break;
                     case 10:
                         break;
@@ -409,5 +439,36 @@ public class ServidorHilo extends Thread {
         
         }
         
+    }
+
+
+    //Funciones para crear y contar archivos localmente
+     // Cuenta archivos reales en la carpeta local
+    private static int contarArchivosLocales() {
+        File carpeta = new File(RUTA_LOCAL);
+        File[] archivos = carpeta.listFiles();
+        int contador = 0;
+        if (archivos != null) {
+            for (File f : archivos) {
+                if (f.isFile()) contador++; // Solo contamos archivos, no carpetas
+            }
+        }
+        return contador;
+    }
+
+    private static int  crearLocalmente(String nombre) {
+        File archivo = new File(RUTA_LOCAL, nombre);
+        try {
+            if (archivo.createNewFile()) {
+                System.out.println("[LOCAL] Archivo creado: " + nombre);
+                return 1;
+            } else {
+                System.out.println("[LOCAL] El archivo ya existe.");
+                return 2;
+            }
+        } catch (IOException e) {
+            System.err.println("[LOCAL] Error creando archivo: " + e.getMessage());
+            return 0;
+        }
     }
 }
