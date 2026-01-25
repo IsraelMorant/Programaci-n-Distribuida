@@ -12,7 +12,7 @@ public class Cliente {
     private static final String RUTA_LOCAL = "./archivos";
     private static final int LIMITE_ARCHIVOS = 3; // Límite local de archivos (3 para pruebas)
     
-    private static final String IP_SERVIDOR = "127.0.0.1"; //ip del servidor
+    private static final String IP_SERVIDOR = "192.168.1.109"; //ip del servidor
     private static final int PUERTO_SERVIDOR = 20000;
 
     public static void main(String[] args) {
