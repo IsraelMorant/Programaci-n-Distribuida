@@ -6,7 +6,7 @@ import java.util.Scanner;
 
 public class Cliente {
 
-    private static final String IP_COORDINADOR = "127.0.0.1";
+    private static final String IP_COORDINADOR = "172.24.16.1";
     private static final int PUERTO_COORDINADOR = 30000;
 
     public static void main(String[] args) {
@@ -26,8 +26,7 @@ public class Cliente {
                 String mensaje = "CREAR:" + nombre;
                 byte[] datos = mensaje.getBytes(StandardCharsets.UTF_8);
 
-                DatagramPacket paquete =
-                        new DatagramPacket(datos, datos.length, ip, PUERTO_COORDINADOR);
+                DatagramPacket paquete = new DatagramPacket(datos, datos.length, ip, PUERTO_COORDINADOR);
                 socket.send(paquete);
 
                 byte[] buffer = new byte[1024];
