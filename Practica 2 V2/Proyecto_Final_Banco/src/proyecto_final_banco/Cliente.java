@@ -27,8 +27,8 @@ public class Cliente {
             Scanner sn = new Scanner(System.in);
             
             sn.useDelimiter("\n");
-            String hostt="192.168.1.109";
-            int portt=10000;
+            String hostt="192.168.1.109";//Ip del la pc que vaya ser el servidor
+            int portt=10000;//Tanto el cliente como el servidor deben de tener el mismo puerto
             Socket sc = new Socket(hostt,portt);//La ip es la del PC que hace de servidor
             //Tambien el port debe ser el mismo tanto en el cliente como en la clase servidor
             

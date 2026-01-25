@@ -46,39 +46,7 @@ public class ServidorHilo extends Thread {
                 opcion = in.readInt();
                 
                 switch(opcion){
-                    
-                    case 1://Para dar de alta en la base de datos al usuario
-                   
-                        break;
-                    case 2:
-                   
-                        break;
-                    case 3://Cuando el cliente pida validacion para ingresar al menu de usuario con sus credenciales
-                          
-                
-                            
-                        break;
-                    case 4://En este caso es para cuando oprima la opcion de depositar a su cuenta
-                         
-                       
-                        break;
-                    case 5://Este caso es para cuando el usuario quiera agregar contactos
-                        
-                        
-                        
                   
-                        break;
-                    case 6://Este caso es para cuando el usuario quiera dar de baja a uno de sus contactos dado el numero de cuenta de su contacto
-                        
-                             
-                        break;
-                    case 7://El caso para cuando el usuario quiera depositar/pagar a uno de sus contactos
-                        
-                        
-                        break;
-                    case 8:
-                       
-                        break;
                     case 33://Opcion para crear archivo en el servidor
                               // 1. Verificamos cuántos archivos tenemos
                 int cantidadActual = contarArchivosLocales();
@@ -107,10 +75,7 @@ public class ServidorHilo extends Thread {
                     }
 
                         break;
-                    case 10:
-                        break;
-                    case 11:
-                        break;
+                   
                         
                     default:
                        out.writeUTF("Escoje una opcion validad");

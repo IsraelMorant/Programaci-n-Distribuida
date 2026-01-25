@@ -12,7 +12,6 @@ import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.File;
 import java.io.IOException;
-import java.util.Scanner;
 import javax.swing.*;
 //import java.awt.event.KeyListener;
 
@@ -47,7 +46,7 @@ public class ClienteHilo extends Thread {
     public void run (){
        
 
-        Scanner sn = new Scanner(System.in);
+       
         //Creando las  ventanas del programa
         JFrame ventanaInicial = new JFrame ();
        //JFrame ventanaUsuario = new JFrame(); 
@@ -175,9 +174,9 @@ public class ClienteHilo extends Thread {
         
         ventanaInicial.add(panelInicial);
         
-        //Agregando el panel ala ventana de Usuario
+      
         
-        //ventanaUsuario.add(panelUsuario);
+       
         //Mostrando la ventna 
         ventanaInicial.setVisible(true);
         
