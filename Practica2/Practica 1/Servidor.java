@@ -1,18 +1,18 @@
-import java.io.File;
-import java.io.IOException;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
+import java.io.File;
+import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 
 public class Servidor {
 
-    // Usamos una ruta para almacenar los archivos creados remotamente
+    // Usamos una ruta relativa para que funcione en cualquier PC
     private static final String RUTA_CARPETA = "./archivos_remotos";
     private static final int PUERTO = 20000;
 
     public static void main(String[] args) {
-        // Nos asegurar que la carpeta exista
+        // Asegurar que la carpeta exista
         new File(RUTA_CARPETA).mkdirs();
 
         try (DatagramSocket socket = new DatagramSocket(PUERTO)) {
@@ -21,11 +21,7 @@ public class Servidor {
 
             byte[] buffer = new byte[1024];
 
-            while (true) {//En lugar de solo manejar un solo cliente ahora se crear un hilo por cada cliente
-
-                Thread hiloCliente = new hiloCliente
-
-                /* 
+            while (true) {
                 DatagramPacket paquete = new DatagramPacket(buffer, buffer.length);
                 socket.receive(paquete);
 
@@ -37,14 +33,15 @@ public class Servidor {
 
                 String respuestaTexto = "";
 
+                // --- LÓGICA PRINCIPAL ---
                 if (mensaje.startsWith("CREAR:")) {
-                    // creamos un mensaje para crear el archivo
+                    // El mensaje viene como "CREAR:archivo.txt"
                     String nombreArchivo = mensaje.substring(6); // Quitamos "CREAR:"
                     respuestaTexto = crearArchivoFisico(nombreArchivo);
                 } 
                 else if (mensaje.equalsIgnoreCase("salir")) {
                     System.out.println("Cliente solicitó desconexión.");
-                    // Si en UDP no hay conexión real, solo ignoramos
+                    // En UDP no hay conexión real, solo ignoramos
                 } 
                 else {
                     respuestaTexto = "Comando no reconocido. Use CREAR:nombre";
@@ -54,8 +51,6 @@ public class Servidor {
                 byte[] datosRespuesta = respuestaTexto.getBytes(StandardCharsets.UTF_8);
                 DatagramPacket respuesta = new DatagramPacket(datosRespuesta, datosRespuesta.length, ipCliente, puertoCliente);
                 socket.send(respuesta);
-
-                */
             }
 
         } catch (Exception e) {
@@ -68,16 +63,14 @@ public class Servidor {
         try {
             if (archivo.createNewFile()) {
                 System.out.println(">> Archivo creado exitosamente: " + nombre);
-                //return "EXITO: Archivo creado remotamente."; como un solo sistema
-                return "Archivo creado.";
+                return "EXITO: Archivo creado remotamente.";
             } else {
                 System.out.println(">> El archivo ya existe: " + nombre);
                 return "INFO: El archivo ya existía.";
             }
         } catch (IOException e) {
             e.printStackTrace();
-           // return "ERROR: No se pudo crear el archivo en el servidor."; como un solo sistema
-           return "Error creando archivo";
+            return "ERROR: No se pudo crear el archivo en el servidor.";
         }
     }
 }
