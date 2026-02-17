@@ -1,10 +1,9 @@
 public class Cliente {
-
     public static void main(String[] args) {
-        System.out.println("Iniciando aplicación cliente...");
+        // Forzamos IPv4 para evitar que Windows bloquee el Multicast
+        System.setProperty("java.net.preferIPv4Stack", "true"); 
         
-        // Ya no pedimos IP, ni creamos Sockets aquí. 
-        // Solo instanciamos el hilo y él se encargará de gritar por Multicast.
+        System.out.println("Iniciando aplicación cliente...");
         ClienteHilo hilo = new ClienteHilo();
         hilo.start();
     }
