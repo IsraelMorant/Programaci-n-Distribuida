@@ -14,8 +14,9 @@ public class ServidorNodoMain {
         // Truco para evitar problemas de IPv6 en Multicast
         System.setProperty("java.net.preferIPv4Stack", "true"); 
         int puerto = 8081; 
-
+        
         try {
+            System.out.println("Java está usando la IP local: " + java.net.InetAddress.getLocalHost().getHostAddress());
             // 1. Levantamos el servidor de este Nodo para que pueda RECIBIR archivos
             WebServer webServer = new WebServer(puerto);
             XmlRpcServer xmlRpcServer = webServer.getXmlRpcServer();
