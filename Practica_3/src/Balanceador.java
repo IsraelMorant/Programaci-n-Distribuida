@@ -40,13 +40,19 @@ public class Balanceador {
     // --- CÓDIGO MULTICAST (Tus apuntes exactos) ---
     private static void escucharMulticast() {
         try {
-            // Creamos un socket multicast en el puerto 10000:
-            MulticastSocket s = new MulticastSocket(10000);
-            // Configuramos el grupo (IP) a la que nos conectaremos:
-            InetAddress group = InetAddress.getByName("231.0.0.1");
-            // Nos unimos al grupo:
-            s.joinGroup(group);
-
+           
+      
+          // Creamos un socket multicast en el puerto 10000:
+    MulticastSocket s = new MulticastSocket(10000);
+    
+    // Configuramos el grupo (IP) a la que nos conectaremos:
+    InetAddress group = InetAddress.getByName("231.0.0.1");
+    
+    // --- AGREGA ESTA LÍNEA MÁGICA PARA ARREGLAR EL ERROR ---
+    s.setInterface(InetAddress.getLocalHost());
+    
+    // Nos unimos al grupo:
+    s.joinGroup(group);
             System.out.println("[MULTICAST] Radar activo en 231.0.0.1:10000...");
 
             while (true) {

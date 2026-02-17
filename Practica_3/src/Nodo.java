@@ -51,17 +51,15 @@ public class Nodo {
     // --- CÓDIGO MULTICAST (Tus apuntes exactos) ---
     private static String descubrirBalanceador() {
         try {
-            // Creamos el MulticastSocket
-            MulticastSocket s = new MulticastSocket();
-            // Creamos el grupo multicast:
-            InetAddress group = InetAddress.getByName("231.0.0.1");
-            
-            byte[] msj = "BUSCANDO".getBytes();
-            // Crear el Datagrama (mensaje, tamaño msj, grupo Multicast y puerto):
-            DatagramPacket dgp = new DatagramPacket(msj, msj.length, group, 10000);
-            // Enviamos el paquete
-            s.send(dgp);
-
+         MulticastSocket s = new MulticastSocket();
+    InetAddress group = InetAddress.getByName("231.0.0.1");
+    
+    // --- AGREGA ESTA LÍNEA AQUÍ TAMBIÉN ---
+    s.setInterface(InetAddress.getLocalHost());
+    
+    byte[] msj = "BUSCANDO".getBytes();
+    DatagramPacket dgp = new DatagramPacket(msj, msj.length, group, 10000);
+    s.send(dgp);
             // Esperar respuesta
             s.setSoTimeout(5000);
             byte[] buffer = new byte[256];
