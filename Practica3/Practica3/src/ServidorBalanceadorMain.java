@@ -15,7 +15,7 @@ public class ServidorBalanceadorMain {
             hiloMulticast.start();
 
             // 2. Levantamos el servidor XML-RPC en el puerto 8080
-            WebServer webServer = new WebServer(8080);
+            WebServer webServer = new WebServer(9000);
             XmlRpcServer xmlRpcServer = webServer.getXmlRpcServer();
 
             // 3. Le decimos al servidor qué clase tiene permiso de ser ejecutada por los clientes

@@ -128,7 +128,7 @@ public class ClienteHilo extends Thread {
         try {
             XmlRpcClientConfigImpl config = new XmlRpcClientConfigImpl();
             // Nos conectamos al puerto 8080 del balanceador descubierto
-            config.setServerURL(new URL("http://" + ipBalanceadorDescubierto + ":8080/xmlrpc"));
+            config.setServerURL(new URL("http://" + ipBalanceadorDescubierto + ":9000/xmlrpc"));
             
             XmlRpcClient cliente = new XmlRpcClient();
             cliente.setConfig(config);
