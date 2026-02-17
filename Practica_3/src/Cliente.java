@@ -24,12 +24,15 @@ public class Cliente {
     // --- CÓDIGO MULTICAST (Tus apuntes exactos) ---
     private static String descubrirBalanceador() {
         try {
-            MulticastSocket s = new MulticastSocket();
-            InetAddress group = InetAddress.getByName("231.0.0.1");
-            
-            byte[] msj = "BUSCANDO".getBytes();
-            DatagramPacket dgp = new DatagramPacket(msj, msj.length, group, 10000);
-            s.send(dgp);
+           MulticastSocket s = new MulticastSocket();
+    InetAddress group = InetAddress.getByName("231.0.0.1");
+    
+    // --- AGREGA ESTA LÍNEA AQUÍ TAMBIÉN ---
+    s.setInterface(InetAddress.getLocalHost());
+    
+    byte[] msj = "BUSCANDO".getBytes();
+    DatagramPacket dgp = new DatagramPacket(msj, msj.length, group, 10000);
+    s.send(dgp);
 
             s.setSoTimeout(3000);
             byte[] buffer = new byte[256];
