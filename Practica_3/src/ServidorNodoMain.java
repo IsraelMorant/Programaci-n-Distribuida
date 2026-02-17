@@ -56,9 +56,18 @@ public class ServidorNodoMain {
         try {
             InetAddress grupo = InetAddress.getByName("230.0.0.1");
             MulticastSocket socket = new MulticastSocket();
-            String mensaje = "BUSCANDO_BALANCEADOR";
-            DatagramPacket paqueteSalida = new DatagramPacket(mensaje.getBytes(), mensaje.length(), grupo, 4446);
-            socket.send(paqueteSalida); 
+
+            
+
+// --- 1. OBLIGAMOS a que el grito salga SÓLO por el Wi-Fi ---
+        socket.setInterface(InetAddress.getLocalHost());
+        
+        // --- 2. AUMENTAMOS la fuerza del paquete para que el router no lo mate ---
+        socket.setTimeToLive(5); 
+        
+        String mensaje = "BUSCANDO_BALANCEADOR";
+        DatagramPacket paqueteSalida = new DatagramPacket(mensaje.getBytes(), mensaje.length(), grupo, 4446);
+        socket.send(paqueteSalida);
             
             socket.setSoTimeout(5000); // Espera 5 segundos máximo
             byte[] buffer = new byte[256];
