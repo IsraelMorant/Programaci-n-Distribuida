@@ -18,9 +18,9 @@ public class Balanceador {
         System.setProperty("java.net.preferIPv4Stack", "true");
 
         try {
-            System.out.println("=========================================");
+          
             System.out.println("      INICIANDO BALANCEADOR CENTRAL");
-            System.out.println("=========================================");
+     
 
             new Thread(() -> escucharMulticast()).start();
 
@@ -31,41 +31,46 @@ public class Balanceador {
             xmlRpcServer.setHandlerMapping(phm);
             webServer.start();
 
-            System.out.println("[BALANCEADOR] RPC listo en puerto 9000 para recibir archivos.");
+            System.out.println("BB RPC listo en puerto 9000 para recibir archivos.");
 
         } catch (Exception e) {
             System.err.println("Error fatal: " + e.getMessage());
         }
     }
 
-    private static void escucharMulticast() {
-        try {
-            MulticastSocket s = new MulticastSocket(10000);
-            InetAddress group = InetAddress.getByName("231.0.0.1");
+   private static void escucharMulticast() {
+    try {
+        // En lugar de new MulticastSocket(10000), usamos esta estructura:
+        java.net.InetSocketAddress direccion = new java.net.InetSocketAddress(10000);
+        MulticastSocket s = new MulticastSocket(null); // Socket sin puerto aún
+        s.setReuseAddress(true);
+        s.bind(direccion); // Se amarra al puerto 10000 en todas las IPs
 
-            // PARCHE: Obligamos a usar la antena física real
-            NetworkInterface ni = getRedFisica();
-            if (ni != null) {
-                s.setNetworkInterface(ni);
-            }
+        InetAddress group = InetAddress.getByName("231.0.0.1");
+        NetworkInterface ni = getRedFisica();
+        if (ni != null) {
+            s.setNetworkInterface(ni);
+        }
 
-            s.joinGroup(group);
-            System.out.println("[MULTICAST] Radar activo en 231.0.0.1:10000 (Red física)...");
-
+        s.joinGroup(new java.net.InetSocketAddress(group, 0), ni);
+        System.out.println("[MULTICAST] Radar activo. Esperando nodos externos...");
+        // ... resto del while igual
             while (true) {
                 byte[] buffer = new byte[256];
                 DatagramPacket dgp = new DatagramPacket(buffer, buffer.length);
-                s.receive(dgp);
+                s.receive(dgp); // Recibe el paquete
 
                 String mensaje = new String(dgp.getData(), 0, dgp.getLength());
 
                 if (mensaje.equals("BUSCANDO")) {
                     String respuesta = "AQUI_ESTOY";
+                    // IMPORTANTE: Respondemos directamente a la IP y PUERTO del remitente
                     DatagramPacket dgpRespuesta = new DatagramPacket(
                             respuesta.getBytes(), respuesta.length(),
                             dgp.getAddress(), dgp.getPort()
                     );
                     s.send(dgpRespuesta);
+                    System.out.println("[MULTICAST] Respondido a: " + dgp.getAddress().getHostAddress());
                 }
             }
         } catch (Exception e) {
@@ -96,7 +101,7 @@ public class Balanceador {
         public boolean registrarNodo(String urlNodo) {
             if (!nodos.contains(urlNodo)) {
                 nodos.add(urlNodo);
-                System.out.println("[REGISTRO] ¡Nuevo Nodo añadido!: " + urlNodo);
+                System.out.println("R  Nodo añadido: " + urlNodo);
             }
             return true;
         }
@@ -111,7 +116,7 @@ public class Balanceador {
                 String urlNodoDestino = nodos.get(turnoActual);
                 turnoActual = (turnoActual + 1) % maxNodos; 
 
-                System.out.println("[ENRUTANDO] Mandando '" + nombreArchivo + "' a: " + urlNodoDestino);
+                System.out.println("EE Mandando '" + nombreArchivo + "' a: " + urlNodoDestino);
                 int respuestaNodo = enviarRPC(urlNodoDestino, nombreArchivo);
 
                 if (respuestaNodo == 1 || respuestaNodo == 2) return respuestaNodo; 
