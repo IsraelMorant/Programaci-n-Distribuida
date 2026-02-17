@@ -101,11 +101,15 @@ public class ClienteHilo extends Thread {
             System.out.println("[CLIENTE] Buscando balanceador por Multicast...");
             InetAddress grupo = InetAddress.getByName("230.0.0.1");
             MulticastSocket socket = new MulticastSocket();
-            
-            String mensaje = "BUSCANDO_BALANCEADOR";
-            DatagramPacket paqueteSalida = new DatagramPacket(mensaje.getBytes(), mensaje.length(), grupo, 4446);
-            socket.send(paqueteSalida); // Enviamos el grito
-            
+            // --- 1. OBLIGAMOS a que el grito salga SÓLO por el Wi-Fi ---
+        socket.setInterface(InetAddress.getLocalHost());
+        
+        // --- 2. AUMENTAMOS la fuerza del paquete para que el router no lo mate ---
+        socket.setTimeToLive(5); 
+        
+        String mensaje = "BUSCANDO_BALANCEADOR";
+        DatagramPacket paqueteSalida = new DatagramPacket(mensaje.getBytes(), mensaje.length(), grupo, 4446);
+        socket.send(paqueteSalida);
             // Esperamos respuesta máximo 3 segundos para no congelar la ventana
             socket.setSoTimeout(3000); 
             byte[] buffer = new byte[256];
