@@ -8,6 +8,7 @@ public class ServidorBalanceadorMain {
 
     public static void main(String[] args) {
         try {
+            System.out.println("Java está usando la IP local: " + java.net.InetAddress.getLocalHost().getHostAddress());
             System.out.println("Iniciando Sistema Distribuido...");
             
             // 1. Levantamos el radar de Multicast en un hilo paralelo
