@@ -31,19 +31,19 @@ public class Nodo {
             String miIp = getIpReal();
             String miUrl = "http://" + miIp + ":" + puerto + "/xmlrpc";
 
-            System.out.println("=========================================");
-            System.out.println("[NODO] Iniciado en: " + miUrl);
-            System.out.println("[NODO] Buscando al Balanceador...");
+         
+            System.out.println("NN Iniciado en: " + miUrl);
+            System.out.println("NN Buscando al Balanceador");
 
             String ipBalanceador = descubrirBalanceador();
 
             if (ipBalanceador != null) {
-                System.out.println("[NODO] Balanceador encontrado en " + ipBalanceador);
+                System.out.println("NN Balanceador encontrado en " + ipBalanceador);
                 registrarEnBalanceador(ipBalanceador, miUrl);
             } else {
-                System.out.println("[NODO] ERROR: No se encontró Balanceador.");
+                System.out.println("NN ERROR: No se encontró Balanceador.");
             }
-            System.out.println("=========================================");
+           
 
         } catch (Exception e) {
             System.err.println("Error fatal: " + e.getMessage());
@@ -55,13 +55,14 @@ public class Nodo {
             MulticastSocket s = new MulticastSocket();
             InetAddress group = InetAddress.getByName("231.0.0.1");
             
-            // PARCHE: Obligamos a usar la antena física
+            
             NetworkInterface ni = getRedFisica();
             if (ni != null) s.setNetworkInterface(ni);
-            s.setTimeToLive(5); // Fuerza del paquete
+            s.setTimeToLive(5);
 
-            byte[] msj = "BUSCANDO".getBytes();
+            byte[] msj = "buscando".getBytes();
             DatagramPacket dgp = new DatagramPacket(msj, msj.length, group, 10000);
+            s.setTimeToLive(255); // Alcance máximo en la red local
             s.send(dgp);
 
             s.setSoTimeout(5000);
@@ -83,11 +84,10 @@ public class Nodo {
             cliente.setConfig(config);
             Object[] parametros = new Object[]{miUrl};
             cliente.execute("Gestor.registrarNodo", parametros);
-            System.out.println("[NODO] ¡Registrado con éxito!");
+            System.out.println("NN Registrado con exito");
         } catch (Exception e) { System.err.println("Error al registrar: " + e.getMessage()); }
     }
 
-    // --- ESCÁNER DE RED FÍSICA ---
     public static NetworkInterface getRedFisica() throws Exception {
         Enumeration<NetworkInterface> nets = NetworkInterface.getNetworkInterfaces();
         for (NetworkInterface netint : Collections.list(nets)) {
@@ -112,7 +112,7 @@ public class Nodo {
         return InetAddress.getLocalHost().getHostAddress(); 
     }
 
-    // --- LÓGICA DE GUARDADO FÍSICO ---
+   
     public int guardarEnDisco(String nombre) {
         String carpeta = "./archivos_nodo";
         File dir = new File(carpeta);
@@ -127,7 +127,7 @@ public class Nodo {
 
         try {
             if (new File(carpeta, nombre).createNewFile()) {
-                System.out.println("[NODO] Archivo guardado: " + nombre);
+                System.out.println("NN Archivo guardado: " + nombre);
                 return 1;
             } else return 2;
         } catch (IOException e) { return 0; }

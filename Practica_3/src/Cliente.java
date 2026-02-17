@@ -19,7 +19,7 @@ public class Cliente {
 
     public static void main(String[] args) {
         System.setProperty("java.net.preferIPv4Stack", "true");
-        System.out.println("[CLIENTE] Buscando Balanceador...");
+        System.out.println("CC Buscando Balanceador");
         ipBalanceador = descubrirBalanceador();
         crearVentana();
     }
@@ -29,7 +29,7 @@ public class Cliente {
             MulticastSocket s = new MulticastSocket();
             InetAddress group = InetAddress.getByName("231.0.0.1");
             
-            // PARCHE: Obligamos a usar la antena física
+            
             NetworkInterface ni = getRedFisica();
             if (ni != null) s.setNetworkInterface(ni);
             s.setTimeToLive(5); 
@@ -45,10 +45,10 @@ public class Cliente {
             
             String ip = respuesta.getAddress().getHostAddress();
             s.close();
-            System.out.println("[CLIENTE] Balanceador encontrado en: " + ip);
+            System.out.println(" CC Balanceador encontrado en: " + ip);
             return ip;
         } catch (Exception e) {
-            System.out.println("[CLIENTE] No se encontró Balanceador en la red.");
+            System.out.println("CC No se encontró Balanceador en la red.");
             return null;
         }
     }
