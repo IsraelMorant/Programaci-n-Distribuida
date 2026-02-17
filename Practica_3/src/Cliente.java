@@ -5,7 +5,10 @@ import java.io.IOException;
 import java.net.DatagramPacket;
 import java.net.InetAddress;
 import java.net.MulticastSocket;
+import java.net.NetworkInterface;
 import java.net.URL;
+import java.util.Collections;
+import java.util.Enumeration;
 import javax.swing.*;
 import org.apache.xmlrpc.client.XmlRpcClient;
 import org.apache.xmlrpc.client.XmlRpcClientConfigImpl;
@@ -21,18 +24,19 @@ public class Cliente {
         crearVentana();
     }
 
-    // --- CÓDIGO MULTICAST (Tus apuntes exactos) ---
     private static String descubrirBalanceador() {
         try {
-           MulticastSocket s = new MulticastSocket();
-    InetAddress group = InetAddress.getByName("231.0.0.1");
-    
-    // --- AGREGA ESTA LÍNEA AQUÍ TAMBIÉN ---
-    s.setInterface(InetAddress.getLocalHost());
-    
-    byte[] msj = "BUSCANDO".getBytes();
-    DatagramPacket dgp = new DatagramPacket(msj, msj.length, group, 10000);
-    s.send(dgp);
+            MulticastSocket s = new MulticastSocket();
+            InetAddress group = InetAddress.getByName("231.0.0.1");
+            
+            // PARCHE: Obligamos a usar la antena física
+            NetworkInterface ni = getRedFisica();
+            if (ni != null) s.setNetworkInterface(ni);
+            s.setTimeToLive(5); 
+
+            byte[] msj = "BUSCANDO".getBytes();
+            DatagramPacket dgp = new DatagramPacket(msj, msj.length, group, 10000);
+            s.send(dgp);
 
             s.setSoTimeout(3000);
             byte[] buffer = new byte[256];
@@ -47,6 +51,21 @@ public class Cliente {
             System.out.println("[CLIENTE] No se encontró Balanceador en la red.");
             return null;
         }
+    }
+
+    // --- ESCÁNER DE RED FÍSICA ---
+    public static NetworkInterface getRedFisica() throws Exception {
+        Enumeration<NetworkInterface> nets = NetworkInterface.getNetworkInterfaces();
+        for (NetworkInterface netint : Collections.list(nets)) {
+            String nombre = netint.getDisplayName().toLowerCase();
+            if (netint.isUp() && !netint.isLoopback() && netint.supportsMulticast() && 
+                !nombre.contains("wsl") && !nombre.contains("virtual") && !nombre.contains("vmware")) {
+                for (InetAddress addr : Collections.list(netint.getInetAddresses())) {
+                    if (addr instanceof java.net.Inet4Address) return netint;
+                }
+            }
+        }
+        return null;
     }
 
     private static void crearVentana() {
@@ -87,7 +106,6 @@ public class Cliente {
             }
 
             if (cont < 3) {
-                // Guardar local
                 try {
                     if (new File(dir, nombre).createNewFile()) {
                         JOptionPane.showMessageDialog(null, "Archivo creado localmente con éxito");
@@ -96,7 +114,6 @@ public class Cliente {
                     }
                 } catch (IOException ex) { JOptionPane.showMessageDialog(null, "Error al crear"); }
             } else {
-                // Mandar al servidor
                 if (ipBalanceador == null) {
                     JOptionPane.showMessageDialog(null, "Límite local alcanzado y no hay red.");
                 } else {

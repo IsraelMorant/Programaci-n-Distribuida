@@ -8,7 +8,10 @@ import java.io.IOException;
 import java.net.DatagramPacket;
 import java.net.InetAddress;
 import java.net.MulticastSocket;
+import java.net.NetworkInterface;
 import java.net.URL;
+import java.util.Collections;
+import java.util.Enumeration;
 
 public class Nodo {
 
@@ -17,7 +20,6 @@ public class Nodo {
         int puerto = 8081; 
 
         try {
-            // 1. Iniciamos servidor para recibir archivos
             WebServer webServer = new WebServer(puerto);
             XmlRpcServer xmlRpcServer = webServer.getXmlRpcServer();
             PropertyHandlerMapping phm = new PropertyHandlerMapping();
@@ -25,14 +27,14 @@ public class Nodo {
             xmlRpcServer.setHandlerMapping(phm);
             webServer.start();
 
-            String miIp = InetAddress.getLocalHost().getHostAddress();
+            // PARCHE: Obtenemos la IP real de la red, no la de WSL
+            String miIp = getIpReal();
             String miUrl = "http://" + miIp + ":" + puerto + "/xmlrpc";
 
             System.out.println("=========================================");
             System.out.println("[NODO] Iniciado en: " + miUrl);
             System.out.println("[NODO] Buscando al Balanceador...");
 
-            // 2. Buscar Balanceador y registrarse
             String ipBalanceador = descubrirBalanceador();
 
             if (ipBalanceador != null) {
@@ -48,28 +50,27 @@ public class Nodo {
         }
     }
 
-    // --- CÓDIGO MULTICAST (Tus apuntes exactos) ---
     private static String descubrirBalanceador() {
         try {
-         MulticastSocket s = new MulticastSocket();
-    InetAddress group = InetAddress.getByName("231.0.0.1");
-    
-    // --- AGREGA ESTA LÍNEA AQUÍ TAMBIÉN ---
-    s.setInterface(InetAddress.getLocalHost());
-    
-    byte[] msj = "BUSCANDO".getBytes();
-    DatagramPacket dgp = new DatagramPacket(msj, msj.length, group, 10000);
-    s.send(dgp);
-            // Esperar respuesta
+            MulticastSocket s = new MulticastSocket();
+            InetAddress group = InetAddress.getByName("231.0.0.1");
+            
+            // PARCHE: Obligamos a usar la antena física
+            NetworkInterface ni = getRedFisica();
+            if (ni != null) s.setNetworkInterface(ni);
+            s.setTimeToLive(5); // Fuerza del paquete
+
+            byte[] msj = "BUSCANDO".getBytes();
+            DatagramPacket dgp = new DatagramPacket(msj, msj.length, group, 10000);
+            s.send(dgp);
+
             s.setSoTimeout(5000);
             byte[] buffer = new byte[256];
             DatagramPacket respuesta = new DatagramPacket(buffer, buffer.length);
             s.receive(respuesta);
             
             String ipEncontrada = respuesta.getAddress().getHostAddress();
-            // Cerramos el socket:
             s.close();
-            
             return ipEncontrada;
         } catch (Exception e) { return null; }
     }
@@ -86,6 +87,31 @@ public class Nodo {
         } catch (Exception e) { System.err.println("Error al registrar: " + e.getMessage()); }
     }
 
+    // --- ESCÁNER DE RED FÍSICA ---
+    public static NetworkInterface getRedFisica() throws Exception {
+        Enumeration<NetworkInterface> nets = NetworkInterface.getNetworkInterfaces();
+        for (NetworkInterface netint : Collections.list(nets)) {
+            String nombre = netint.getDisplayName().toLowerCase();
+            if (netint.isUp() && !netint.isLoopback() && netint.supportsMulticast() && 
+                !nombre.contains("wsl") && !nombre.contains("virtual") && !nombre.contains("vmware")) {
+                for (InetAddress addr : Collections.list(netint.getInetAddresses())) {
+                    if (addr instanceof java.net.Inet4Address) return netint;
+                }
+            }
+        }
+        return null;
+    }
+
+    public static String getIpReal() throws Exception {
+        NetworkInterface netint = getRedFisica();
+        if (netint != null) {
+            for (InetAddress addr : Collections.list(netint.getInetAddresses())) {
+                if (addr instanceof java.net.Inet4Address) return addr.getHostAddress();
+            }
+        }
+        return InetAddress.getLocalHost().getHostAddress(); 
+    }
+
     // --- LÓGICA DE GUARDADO FÍSICO ---
     public int guardarEnDisco(String nombre) {
         String carpeta = "./archivos_nodo";
@@ -93,17 +119,17 @@ public class Nodo {
         dir.mkdirs();
 
         int cont = 0;
-        for (File f : dir.listFiles()) { if (f.isFile()) cont++; }
+        if (dir.listFiles() != null) {
+            for (File f : dir.listFiles()) { if (f.isFile()) cont++; }
+        }
 
-        if (cont >= 3) return 3; // Límite alcanzado
+        if (cont >= 3) return 3; 
 
         try {
             if (new File(carpeta, nombre).createNewFile()) {
                 System.out.println("[NODO] Archivo guardado: " + nombre);
                 return 1;
-            } else {
-                return 2;
-            }
+            } else return 2;
         } catch (IOException e) { return 0; }
     }
 }
