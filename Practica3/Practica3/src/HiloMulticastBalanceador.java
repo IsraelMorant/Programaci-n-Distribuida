@@ -10,7 +10,7 @@ public class HiloMulticastBalanceador extends Thread {
     public void run() {
         try {
             // Se une al grupo Multicast
-            MulticastSocket socket = new MulticastSocket(4446);
+            MulticastSocket socket = new MulticastSocket(4444);
             InetAddress grupo = InetAddress.getByName("230.0.0.1");
             socket.joinGroup(grupo);
             
