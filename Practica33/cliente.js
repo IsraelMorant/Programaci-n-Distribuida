@@ -4,30 +4,22 @@ const path = require('path');
 const dgram = require('dgram');
 const stubify = require('./stubify');
 
-const PUERTO_WEB = 3000; // Puerto para entrar desde el navegador
-let ipBalanceador = null;
-let balanceadorRPC = null;
+const PUERTO_WEB = 3000;
 
-// --- 1. Configuración del Servidor Web Local ---
+// --- SERVIDOR WEB LOCAL (No cambia, es la misma interfaz) ---
 const server = http.createServer(async (req, res) => {
-    // A) Servir el archivo HTML principal
     if (req.method === 'GET' && req.url === '/') {
         fs.readFile(path.join(__dirname, 'index.html'), (err, data) => {
-            if (err) {
-                res.writeHead(500); res.end('Error al cargar index.html'); return;
-            }
+            if (err) { res.writeHead(500); res.end('Error'); return; }
             res.writeHead(200, { 'Content-Type': 'text/html' });
             res.end(data);
         });
-    } 
-    // B) API que recibe la orden del navegador
-    else if (req.method === 'POST' && req.url === '/api/crear') {
+    } else if (req.method === 'POST' && req.url === '/api/crear') {
         let body = '';
         req.on('data', chunk => { body += chunk.toString(); });
         req.on('end', async () => {
             const { nombreArchivo } = JSON.parse(body);
             const resultado = await procesarCreacionArchivo(nombreArchivo);
-            
             res.writeHead(200, { 'Content-Type': 'application/json' });
             res.end(JSON.stringify(resultado));
         });
@@ -36,64 +28,86 @@ const server = http.createServer(async (req, res) => {
     }
 });
 
-// --- 2. Lógica Central (Transparencia) ---
 async function procesarCreacionArchivo(nombre) {
-    if (!ipBalanceador) {
-        return { tipo: 'error', mensaje: "Aún buscando Balanceador en la red..." };
-    }
-
     const dirLocal = './archivos_cliente';
     if (!fs.existsSync(dirLocal)) fs.mkdirSync(dirLocal);
-
     const archivosLocales = fs.readdirSync(dirLocal);
     const rutaCompleta = `${dirLocal}/${nombre}`;
 
+    // INTENTO LOCAL
     if (archivosLocales.length < 3) {
-        // INTENTO LOCAL
-        if (fs.existsSync(rutaCompleta)) {
-            return { tipo: 'info', mensaje: "El archivo ya existe localmente." };
-        } else {
-            fs.writeFileSync(rutaCompleta, "Contenido creado desde Web");
-            return { tipo: 'exito', mensaje: "Archivo creado localmente con éxito." };
-        }
+        if (fs.existsSync(rutaCompleta)) return { tipo: 'info', mensaje: "El archivo ya existe localmente." };
+        fs.writeFileSync(rutaCompleta, "Contenido creado desde Web");
+        return { tipo: 'exito', mensaje: "Archivo creado localmente con éxito." };
     } else {
-        // INTENTO REMOTO (RPC Transparente)
-        console.log(`[WEB] Límite local lleno. Enviando '${nombre}' a la red...`);
-        try {
-            const res = await balanceadorRPC.recibirYDistribuirArchivo(nombre);
-            if (res === 1) return { tipo: 'exito', mensaje: "Límite local lleno. Archivo guardado en la red distribuida." };
-            if (res === 2) return { tipo: 'info', mensaje: "El archivo ya existe en la red." };
-            if (res === 3) return { tipo: 'error', mensaje: "ERROR: Capacidad máxima de la red alcanzada." };
-            return { tipo: 'error', mensaje: "Error desconocido en la red." };
-        } catch (e) {
-            return { tipo: 'error', mensaje: "Fallo al conectar con el Balanceador." };
-        }
+        // INTENTO DESCENTRALIZADO
+        console.log(`\n[WEB] Límite local alcanzado. Buscando nodo disponible para '${nombre}'...`);
+        return await buscarNodoYEnviar(nombre);
     }
 }
 
-// --- 3. Inicio: Buscar Balanceador y levantar servidor web ---
-console.log("[CLIENTE WEB] Iniciando... Buscando Balanceador por Multicast.");
-const buscador = dgram.createSocket('udp4');
+// --- LÓGICA P2P (El corazón del sistema distribuido) ---
+function buscarNodoYEnviar(nombreArchivo) {
+    return new Promise((resolve) => {
+        const clienteUDP = dgram.createSocket('udp4');
+        let resuelto = false;
 
-buscador.on('message', (msg, rinfo) => {
-    if (msg.toString() === "AQUI_ESTOY") {
-        ipBalanceador = rinfo.address;
-        console.log(`[CLIENTE WEB] ¡Balanceador encontrado en ${ipBalanceador}!`);
-        // Preparamos el cliente RPC usando tu librería stubify
-        balanceadorRPC = stubify(`http://${ipBalanceador}:9000`, 'Gestor', ['recibirYDistribuirArchivo']);
-        buscador.close();
+        // Temporizador: Si nadie responde en 2 segundos, la red está llena o apagada
+        const timeout = setTimeout(() => {
+            if (!resuelto) {
+                resuelto = true;
+                clienteUDP.close();
+                console.log(`[P2P] Nadie respondió. Red llena.`);
+                resolve({ tipo: 'error', mensaje: "[ERROR] Capacidad máxima. Ningún nodo en la red tiene espacio." });
+            }
+        }, 2000);
 
-        // Solo iniciamos el servidor web cuando ya tenemos red
-        server.listen(PUERTO_WEB, () => {
-            
-            console.log(`   Interfaz`);
-            console.log(`    http://localhost:${PUERTO_WEB}`);
-            
+        // Escuchamos a ver si algún Nodo nos levanta la mano
+        clienteUDP.on('message', async (msg, rinfo) => {
+            const mensaje = msg.toString();
+            if (!resuelto && mensaje.startsWith("TENGO_ESPACIO:")) {
+                resuelto = true; // Ya encontramos a uno, ignoramos a los demás
+                clearTimeout(timeout);
+                
+                const partes = mensaje.split(":");
+                const ipNodo = partes[1];
+                const puertoNodo = partes[2];
+                
+                console.log(`[P2P] Nodo encontrado en ${ipNodo}. Enviando archivo vía RPC...`);
+                
+                try {
+                    // Nos conectamos directo al nodo ganador y le mandamos el archivo
+                    const nodoRemoto = stubify(`http://${ipNodo}:${puertoNodo}`, 'Nodo', ['guardarEnDisco']);
+                    const res = await nodoRemoto.guardarEnDisco(nombreArchivo);
+                    clienteUDP.close();
+                    
+                    if (res === 1) resolve({ tipo: 'exito', mensaje: `Guardado en la RED descentralizada (En nodo ${ipNodo}).` });
+                    else resolve({ tipo: 'error', mensaje: "Error al guardar en el nodo remoto." });
+                } catch (e) {
+                    clienteUDP.close();
+                    resolve({ tipo: 'error', mensaje: "Fallo la conexión RPC con el nodo." });
+                }
+            }
         });
-    }
-});
 
-buscador.bind(() => {
-    buscador.addMembership('231.0.0.1');
-    buscador.send(Buffer.from("BUSCANDO"), 10000, '231.0.0.1');
+        // Gritamos a toda la red preguntando por espacio
+        clienteUDP.bind(() => {
+            clienteUDP.setBroadcast(true);
+            const mensaje = Buffer.from(`QUIEN_TIENE_ESPACIO:${nombreArchivo}`);
+            
+            // Ojo: Si el hotspot de tu celular bloquea el universal (255.255.255.255), 
+            // cambia esto por la IP de Broadcast de tu celular (ej. '172.20.10.255')
+            clienteUDP.send(mensaje, 10000, '255.255.255.255', (err) => {
+                if (err) console.log("Error al enviar Broadcast.");
+            });
+        });
+    });
+}
+
+// Iniciar el cliente web
+server.listen(PUERTO_WEB, '0.0.0.0', () => {
+    console.log(`==================================================`);
+    console.log(`   CLIENTE P2P DESCENTRALIZADO LISTO`);
+    console.log(`   navegador: http://localhost:${PUERTO_WEB}`);
+    console.log(`==================================================`);
 });
