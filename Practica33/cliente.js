@@ -87,7 +87,7 @@ buscador.on('message', (msg, rinfo) => {
         server.listen(PUERTO_WEB, () => {
             
             console.log(`   Interfaz`);
-            console.log(`   Abre en tu navegador: http://localhost:${PUERTO_WEB}`);
+            console.log(`    http://localhost:${PUERTO_WEB}`);
             
         });
     }
