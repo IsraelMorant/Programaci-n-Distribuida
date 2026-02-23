@@ -81,10 +81,17 @@ buscador.on('message', (msg, rinfo) => {
         buscador.close();
 
         server.listen(PUERTO_WEB, () => {
+<<<<<<< HEAD
             console.log(`\n==================================================`);
             console.log(`   ✅ INTERFAZ WEB LISTA`);
             console.log(`   👉 Abre en tu navegador: http://localhost:${PUERTO_WEB}`);
             console.log(`==================================================\n`);
+=======
+            
+            console.log(`   Interfaz`);
+            console.log(`    http://localhost:${PUERTO_WEB}`);
+            
+>>>>>>> b737776f5bbf52d539f772a2f6d0623623a20fe8
         });
     }
 });
