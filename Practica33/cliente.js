@@ -2,35 +2,8 @@ const http = require('http');
 const fs = require('fs');
 const path = require('path');
 const dgram = require('dgram');
-const os = require('os');
 const stubify = require('./stubify');
 
-<<<<<<< HEAD
-const PUERTO_WEB = 3000; 
-let ipBalanceador = null;
-let balanceadorRPC = null;
-
-function getIP() {
-    const interfaces = os.networkInterfaces();
-    let ipRadmin = null, ipWifi = null;
-    for (let iface in interfaces) {
-        for (let i of interfaces[iface]) {
-            if (i.family === 'IPv4' && !i.internal && !iface.toLowerCase().includes('wsl') && !iface.toLowerCase().includes('virtual')) {
-                if (iface.toLowerCase().includes('radmin') || i.address.startsWith('172.26.')) ipRadmin = i.address;
-                else ipWifi = i.address;
-            }
-        }
-    }
-    return ipRadmin || ipWifi || '127.0.0.1';
-}
-
-const miIp = getIP();
-
-const server = http.createServer(async (req, res) => {
-    if (req.method === 'GET' && req.url === '/') {
-        fs.readFile(path.join(__dirname, 'index.html'), (err, data) => {
-            if (err) { res.writeHead(500); res.end('Error al cargar index.html'); return; }
-=======
 const PUERTO_WEB = 3000;
 
 // --- SERVIDOR WEB LOCAL (No cambia, es la misma interfaz) ---
@@ -38,7 +11,6 @@ const server = http.createServer(async (req, res) => {
     if (req.method === 'GET' && req.url === '/') {
         fs.readFile(path.join(__dirname, 'index.html'), (err, data) => {
             if (err) { res.writeHead(500); res.end('Error'); return; }
->>>>>>> 35773bbdbc5ee6ce9d4c785e716333d7c94f4d2a
             res.writeHead(200, { 'Content-Type': 'text/html' });
             res.end(data);
         });
@@ -57,11 +29,6 @@ const server = http.createServer(async (req, res) => {
 });
 
 async function procesarCreacionArchivo(nombre) {
-<<<<<<< HEAD
-    if (!ipBalanceador) return { tipo: 'error', mensaje: "Aún buscando Balanceador en la red..." };
-
-=======
->>>>>>> 35773bbdbc5ee6ce9d4c785e716333d7c94f4d2a
     const dirLocal = './archivos_cliente';
     if (!fs.existsSync(dirLocal)) fs.mkdirSync(dirLocal);
     const archivosLocales = fs.readdirSync(dirLocal);
@@ -70,44 +37,6 @@ async function procesarCreacionArchivo(nombre) {
     // INTENTO LOCAL
     if (archivosLocales.length < 3) {
         if (fs.existsSync(rutaCompleta)) return { tipo: 'info', mensaje: "El archivo ya existe localmente." };
-<<<<<<< HEAD
-        fs.writeFileSync(rutaCompleta, "Contenido web");
-        return { tipo: 'exito', mensaje: "Archivo creado localmente con éxito." };
-    } else {
-        console.log(`[WEB] Límite local lleno. Enviando '${nombre}' a la red...`);
-        try {
-            const res = await balanceadorRPC.recibirYDistribuirArchivo(nombre);
-            if (res === 1) return { tipo: 'exito', mensaje: "Límite local lleno. Archivo guardado en la RED distribuida." };
-            if (res === 2) return { tipo: 'info', mensaje: "El archivo ya existe en la RED." };
-            if (res === 3) return { tipo: 'error', mensaje: "ERROR: Capacidad máxima de la red alcanzada." };
-            return { tipo: 'error', mensaje: "Error desconocido en la red." };
-        } catch (e) { return { tipo: 'error', mensaje: "Fallo al conectar con el Balanceador." }; }
-    }
-}
-
-console.log(`[CLIENTE WEB] Iniciando en VPN ${miIp}... Buscando Balanceador.`);
-const buscador = dgram.createSocket('udp4');
-
-buscador.on('message', (msg, rinfo) => {
-    if (msg.toString() === "AQUI_ESTOY") {
-        ipBalanceador = rinfo.address;
-        console.log(`[CLIENTE WEB] ¡Balanceador encontrado en ${ipBalanceador}!`);
-        balanceadorRPC = stubify(`http://${ipBalanceador}:9000`, 'Gestor', ['recibirYDistribuirArchivo']);
-        buscador.close();
-
-        server.listen(PUERTO_WEB, () => {
-<<<<<<< HEAD
-            console.log(`\n==================================================`);
-            console.log(`   ✅ INTERFAZ WEB LISTA`);
-            console.log(`   👉 Abre en tu navegador: http://localhost:${PUERTO_WEB}`);
-            console.log(`==================================================\n`);
-=======
-            
-            console.log(`   Interfaz`);
-            console.log(`    http://localhost:${PUERTO_WEB}`);
-            
->>>>>>> b737776f5bbf52d539f772a2f6d0623623a20fe8
-=======
         fs.writeFileSync(rutaCompleta, "Contenido creado desde Web");
         return { tipo: 'exito', mensaje: "Archivo creado localmente con éxito." };
     } else {
@@ -159,15 +88,8 @@ function buscarNodoYEnviar(nombreArchivo) {
                     resolve({ tipo: 'error', mensaje: "Fallo la conexión RPC con el nodo." });
                 }
             }
->>>>>>> 35773bbdbc5ee6ce9d4c785e716333d7c94f4d2a
         });
 
-<<<<<<< HEAD
-buscador.bind(() => {
-    buscador.addMembership('231.0.0.1', miIp);
-    buscador.setMulticastInterface(miIp);
-    buscador.send(Buffer.from("BUSCANDO"), 10000, '231.0.0.1');
-=======
         // Gritamos a toda la red preguntando por espacio
         clienteUDP.bind(() => {
             clienteUDP.setBroadcast(true);
@@ -188,5 +110,4 @@ server.listen(PUERTO_WEB, '0.0.0.0', () => {
     console.log(`   CLIENTE P2P DESCENTRALIZADO LISTO`);
     console.log(`   navegador: http://localhost:${PUERTO_WEB}`);
     console.log(`==================================================`);
->>>>>>> 35773bbdbc5ee6ce9d4c785e716333d7c94f4d2a
 });
