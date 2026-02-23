@@ -20,7 +20,7 @@ function getIP() {
 
 const miIp = getIP();
 
-// --- 1. LÓGICA RPC (Para guardar el archivo cuando el cliente lo mande) ---
+
 const nodoLogica = {
     guardarEnDisco: (nombre) => {
         const dir = './archivos_nodo';
