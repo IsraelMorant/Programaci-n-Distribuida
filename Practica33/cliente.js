@@ -6,7 +6,6 @@ const stubify = require('./stubify');
 
 const PUERTO_WEB = 3000;
 
-// --- SERVIDOR WEB LOCAL (No cambia, es la misma interfaz) ---
 const server = http.createServer(async (req, res) => {
     if (req.method === 'GET' && req.url === '/') {
         fs.readFile(path.join(__dirname, 'index.html'), (err, data) => {
@@ -95,8 +94,7 @@ function buscarNodoYEnviar(nombreArchivo) {
             clienteUDP.setBroadcast(true);
             const mensaje = Buffer.from(`QUIEN_TIENE_ESPACIO:${nombreArchivo}`);
             
-            // Ojo: Si el hotspot de tu celular bloquea el universal (255.255.255.255), 
-            // cambia esto por la IP de Broadcast de tu celular (ej. '172.20.10.255')
+        
             clienteUDP.send(mensaje, 10000, '255.255.255.255', (err) => {
                 if (err) console.log("Error al enviar Broadcast.");
             });
